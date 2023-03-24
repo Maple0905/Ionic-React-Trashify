@@ -1,0 +1,7 @@
+{
+  "name": "Social Experience",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}

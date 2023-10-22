@@ -1,5 +1,5 @@
 ion-modal#example-modal {
-    --height: 50%;
+    --height: 55%;
     --border-radius: 16px;
     --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
@@ -10,6 +10,29 @@ ion-modal#example-modal::part(backdrop) {
 }
 
 ion-modal#example-modal ion-toolbar {
-    --background: rgb(14 116 144);
+    --background: var(--ion-color-primary, #3880ff);
     --color: white;
+}
+
+ion-segment-button {
+    --indicator-color: var(--ion-color-primary, #3880ff);
+}
+
+/* Material Design styles */
+ion-segment-button.md {
+    --color: #000;
+    --color-checked: var(--ion-color-primary, #3880ff);
+    --indicator-height: 4px;
+}
+
+/* iOS styles */
+ion-segment-button.ios {
+    --color: var(--ion-color-primary, #3880ff);
+    --color-checked: #fff;
+    --border-radius: 20px;
+}
+
+ion-card-header.ios {
+    display: flex;
+    flex-flow: column-reverse;
 }

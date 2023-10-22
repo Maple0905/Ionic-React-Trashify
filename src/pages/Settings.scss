@@ -1,0 +1,21 @@
+#form-view {
+    height: 50%;
+}
+
+#setting-map-view {
+    .setting-map-canvas {
+
+        height: 300px;
+        width: 100%;
+
+        background-color: transparent;
+
+        opacity: 0;
+        transition: opacity 250ms ease-in;
+    }
+
+    .setting-show-map {
+        opacity: 1;
+    }
+
+}

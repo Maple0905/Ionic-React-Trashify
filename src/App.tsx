@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Redirect, Route } from "react-router-dom";
+import { Redirect } from "react-router-dom";
 import { IonApp, IonRouterOutlet, IonSplitPane } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
@@ -41,7 +41,6 @@ import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 import { PrivatePages, PublicPages } from "./routes";
 import RedirectToLogin from "./components/RedirectToLogin";
-import Auth from "./helpers/Auth";
 
 const App: React.FC = () => {
   return (
@@ -123,11 +122,12 @@ const IonicApp: React.FC<IonicAppProps> = ({
             />
             {getRoutes(PublicPages, "public")}
             {getRoutes(PrivatePages, "private")}
-            {Auth.validate() ? (
+            {/* {Auth.validate() ? (
               <Redirect to="/login" />
             ) : (
               <Redirect to="/login" />
-            )}
+            )} */}
+            <Redirect to="/login" />
           </IonRouterOutlet>
         </IonSplitPane>
       </IonReactRouter>

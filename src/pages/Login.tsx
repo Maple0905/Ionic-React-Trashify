@@ -1,16 +1,12 @@
-import React, { useState } from "react";
-import { IonPage, IonModal, useIonToast } from "@ionic/react";
+import React, { useEffect, useState } from "react";
+import { IonCheckbox, IonPage, useIonToast } from "@ionic/react";
 import "./Login.scss";
 import { setIsLoggedIn, setUsername, setEmail } from "../data/user/user.actions";
 import { connect } from "../data/connect";
 import { RouteComponentProps } from "react-router";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClose } from "@fortawesome/free-solid-svg-icons";
-import { set } from "../util/store";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
-import { Plugins } from "@capacitor/core";
 import Store from "../helpers/Store";
 import axios from 'axios';
+import { RESPONSE_INVALID_INFO, RESPONSE_INVALID_TOKEN, RESPONSE_SUCCESS } from "../data/constants";
 
 interface OwnProps extends RouteComponentProps {}
 
@@ -22,33 +18,54 @@ interface DispatchProps {
 
 interface LoginProps extends OwnProps, DispatchProps {}
 
-const Login: React.FC<LoginProps> = ({
-  setIsLoggedIn,
-  history,
-  setUsername: setUsernameAction,
-  setEmail: setEmailAction,
-}) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const Login: React.FC<LoginProps> = ({ history }) => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [signupModal, setSignupModal] = useState(false);
+  const [isRemember, setIsRmemebr] = useState(false);
+  const [rememberedData, setRememberedData] = useState({
+    email: '',
+    password: '',
+  });
   const [present] = useIonToast();
+
+  useEffect(() => {
+    let isMounted = false;
+
+    const isRemembered = async () => {
+      const isRemembered = await Store.get("isRemember");
+      if (isRemembered != null) setIsRmemebr(isRemembered);
+      if (isRemembered) {
+        const email = await Store.get("email");
+        const password = await Store.get("password");
+        if (isMounted) {
+            setRememberedData({ email: email, password: password });
+        }
+      }
+    }
+
+    isRemembered();
+
+    return () => {
+      isMounted = false;
+    }
+
+  }, [isRemember]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
 
-    if (!email) { setEmailError(true); }
-    if (!password) { setPasswordError(true); }
+    if (!rememberedData.email) { setEmailError(true); }
+    if (!rememberedData.password) { setPasswordError(true); }
 
-    if (email && password) {
+    if (rememberedData.email && rememberedData.password) {
       try {
 
-        axios.post(`${process.env.REACT_APP_API}/login.php`, { email: email, password: password })
+        axios.post(`${process.env.REACT_APP_API}/login.php`, { email: rememberedData.email, password: rememberedData.password })
           .then((res) => {
+
             const data = res.data;
             const result = data.result;
             const msg = data.msg;
@@ -59,12 +76,21 @@ const Login: React.FC<LoginProps> = ({
               position: 'bottom'
             });
 
-            if (result == "failed") {
+            if (result == RESPONSE_INVALID_INFO) {
               setFormError(msg);
-            } else if (result == "success") {
+            } else if (result == RESPONSE_SUCCESS) {
               const token = data.token;
+              const role = data.role;
               Store.set("token", token);
+              Store.set("role", role);
+              if (isRemember) {
+                Store.set("isRemember", isRemember);
+                Store.set("email", rememberedData.email);
+                Store.set("passsword", rememberedData.password);;
+              }
               history.push("/home", { direction: "none" });
+            } else if (result == RESPONSE_INVALID_TOKEN) {
+              history.push("/login", {direction: "none"});
             }
           })
           .catch((err) => console.log(err));
@@ -79,7 +105,7 @@ const Login: React.FC<LoginProps> = ({
     <IonPage id="login-page">
       <div className="flex flex-col">
         <div>
-          <img src="assets/img/logo.png" alt="Ionic logo" className="m-4" />
+          <img src="assets/img/h-logo1.png" alt="Ionic logo" className="m-4 h-12" />
           <h1 className="text-4xl px-4 py-8">Login</h1>
         </div>
 
@@ -97,10 +123,10 @@ const Login: React.FC<LoginProps> = ({
           <input
             name="email"
             type="email"
-            className="p-2 border-2 border-gray-100 rounded-xl w-full block mb-8"
+            className="p-2 border-2 border-gray-100 rounded-xl w-full block mb-2"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value!)}
+            value={rememberedData.email}
+            onChange={(e) => setRememberedData({ email: e.target.value, password: rememberedData.password })}
             required
           ></input>
 
@@ -110,16 +136,16 @@ const Login: React.FC<LoginProps> = ({
             </span>
           )}
 
-          <label htmlFor="email" className="mb-2 block">
+          <label htmlFor="email" className="mt-6 mb-2 block">
             Password
           </label>
           <input
             name="password"
             type="password"
-            className="p-2 border-2 border-gray-100 rounded-xl w-full block mb-8"
+            className="p-2 border-2 border-gray-100 rounded-xl w-full block mb-2"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value!)}
+            value={rememberedData.password}
+            onChange={(e) => setRememberedData({ email: rememberedData.email, password: e.target.value })}
             required
           ></input>
 
@@ -129,66 +155,38 @@ const Login: React.FC<LoginProps> = ({
             </span>
           )}
 
+          <div className="flex block mb-2 mt-6 items-center my-auto">
+            <input
+              name="isRemember"
+              type="checkbox"
+              checked={isRemember}
+              onChange={(e) => setIsRmemebr(!isRemember)}
+            ></input>
+            <label className="ml-2">
+              Remember Me
+            </label>
+          </div>
+
           <button
             type="submit"
-            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-xl font-bold"
+            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-xl font-bold mt-6"
           >
             Login
           </button>
+
         </form>
       </div>
       <div className="mb-8 text-center font-bold">
         <span>
           {"Don't have an account? "}
           <span
-            className="py-4 text-blue-600"
-            onClick={() => setSignupModal(true)}
+            className="text-blue-600 font-bold"
+            onClick={() => history.push("/signup", { direction: "none" })}
           >
-            Sign Up
+            SignUp
           </span>
         </span>
       </div>
-
-      <IonModal isOpen={signupModal} id="ion-my-modal">
-        <div className="p-4">
-          <span onClick={() => setSignupModal(false)}>
-            <FontAwesomeIcon icon={faClose} size="2x" />
-          </span>
-        </div>
-        <div className="flex flex-col h-screen justify-center p-4 text-center">
-          <div className="">
-            <img
-              src="/assets/img/logo-lg.png"
-              alt="logo lg"
-              className="object-none mx-auto mb-4"
-            />
-            <p className="my-4 font-bold">Create an account to continue</p>
-            <p>
-              By creating an account you agree to our Terms of Service and
-              Privacy Policy
-            </p>
-          </div>
-          <div className="mb-auto">
-            <a
-              href="/signup"
-              className="w-full my-8 bg-blue-600 text-white py-3 block rounded-xl font-bold"
-            >
-              Sign up with email{" "}
-            </a>
-          </div>
-          <div className="font-bold mb-8">
-            <p>
-              Already have an account?{" "}
-              <span
-                className="py-4 text-purple-600 font-bold"
-                onClick={() => setSignupModal(false)}
-              >
-                Login
-              </span>
-            </p>
-          </div>
-        </div>
-      </IonModal>
     </IonPage>
   );
 };

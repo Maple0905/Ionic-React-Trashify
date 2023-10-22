@@ -1,28 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { RouteComponentProps, withRouter, useLocation } from "react-router";
-import { IonAvatar, IonContent, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuToggle } from "@ionic/react";
-import { home, logOut, settings, timerSharp, person, create } from "ionicons/icons";
+import { IonContent, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuToggle, useIonViewDidEnter } from "@ionic/react";
+import { home, logOut, settings, person, newspaper, lockClosed } from "ionicons/icons";
 
 import { connect } from "../data/connect";
 import { setDarkMode } from "../data/user/user.actions";
 import "./Menu.css";
+import Store from "../helpers/Store";
 
 const routes = {
 
   loggedInPages: [
     { title: "Home", path: "/home", icon: home },
     { title: "Profile", path: "/profile", icon: person },
-    { title: "Requests", path: "/requests", icon: timerSharp },
+    { title: "Requests", path: "/requests-pending", icon: newspaper },
     { title: "Setting", path: "/settings", icon: settings },
-    { title: "Submits", path: "/submits", icon: create },
+    { title: "Change Password", path: "/change-password", icon: lockClosed },
     { title: "Logout", path: "/login", icon: logOut },
   ],
   loggedOutPages: [
     { title: "Home", path: "/home", icon: home },
     { title: "Profile", path: "/profile", icon: person },
-    { title: "Requests", path: "/requests", icon: timerSharp },
-    { title: "Setting", path: "/settings", icon: settings },
-    { title: "Submits", path: "/submits", icon: create },
+    { title: "Requests", path: "/requests-pending", icon: newspaper },
+    { title: "Change Password", path: "/change-password", icon: lockClosed },
     { title: "Logout", path: "/login", icon: logOut },
   ],
 };
@@ -53,6 +53,7 @@ const Menu: React.FC<MenuProps> = ({
   setDarkMode,
   menuEnabled,
 }) => {
+  const [email, setEmail] = useState("");
   const location = useLocation();
 
   function renderlistItems(list: Pages[]) {
@@ -75,16 +76,23 @@ const Menu: React.FC<MenuProps> = ({
       ));
   }
 
+  const getEmail = async () => {
+    const email = await Store.get("email");
+    setEmail(email);
+  }
+
+  useIonViewDidEnter(() => {
+    getEmail();
+  });
+
   return (
     <IonMenu type="overlay" disabled={!menuEnabled} contentId="main">
       <IonContent forceOverscroll={false}>
         <div className="pt-10">
-          <IonAvatar className="w-28 h-28 mx-auto">
-            <img alt="Silhouette of a person's head" src="https://ionicframework.com/docs/img/demos/avatar.svg" />
-          </IonAvatar>
+          <img alt="Logo" src="/assets/img/v-logo1.png" className="mx-auto h-40" />
         </div>
         <div className="py-5 text-base text-center">
-          <span className="text-center">admin@gmail.com</span>
+          <span className="text-center">{email}</span>
         </div>
         <hr className="h-px bg-gray-200 border-0 dark:bg-gray-700"></hr>
         <IonList>

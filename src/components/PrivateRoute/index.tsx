@@ -4,9 +4,7 @@
  *
  */
 import * as React from "react";
-import { Route, Redirect } from "react-router-dom";
-import Store from "../../helpers/Store";
-import Auth from "../../helpers/Auth";
+import { Route } from "react-router-dom";
 
 /*
 const PrivateRoute: React.FC<any> = ({ component: Component, ...rest }) => {
@@ -37,11 +35,12 @@ const PrivateRoute: React.FC<any> = ({ component: Component, ...rest }) => {
     <Route
       {...rest}
       render={(props) => {
-        return Auth.validate() ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/login" />
-        );
+        // return Auth.validate() ? (
+        //   <Component {...props} />
+        // ) : (
+        //   <Redirect to="/login" />
+        // );
+        return <Component {...props} />;
       }}
     />
   );

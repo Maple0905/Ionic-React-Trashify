@@ -1,0 +1,51 @@
+ion-modal#request-modal {
+  --height: 40%;
+  --border-radius: 16px;
+  --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+ion-modal#request-modal::part(backdrop) {
+  background: rgba(209, 213, 219);
+  opacity: 1;
+}
+
+ion-modal#request-modal ion-toolbar {
+  --background: var(--ion-color-primary, #3880ff);
+  --color: white;
+}
+
+ion-modal#invoice-modal {
+  --height: 70%;
+  --border-radius: 16px;
+  --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+ion-modal#invoice-modal::part(backdrop) {
+  background: rgba(209, 213, 219);
+  opacity: 1;
+}
+
+ion-modal#invoice-modal ion-toolbar {
+  --background: var(--ion-color-primary, #3880ff);
+  --color: white;
+}
+
+ion-modal#progressing-modal {
+  --height: 40%;
+  --border-radius: 16px;
+  --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+ion-modal#progressing-modal::part(backdrop) {
+  background: rgba(209, 213, 219);
+  opacity: 1;
+}
+
+ion-modal#progressing-modal ion-toolbar {
+  --background: var(--ion-color-primary, #3880ff);
+  --color: white;
+}
+
+.tab-bar {
+  font-size: 12px;
+}

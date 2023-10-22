@@ -1,78 +1,90 @@
-import React, { useState } from "react";
-import { IonContent, IonPage, useIonToast, useIonViewWillEnter } from "@ionic/react";
+import React, { useEffect, useState } from "react";
+import { IonContent, IonPage, useIonToast } from "@ionic/react";
 import { connect } from '../data/connect';
 import Header from "../components/Header";
 import Store from "../helpers/Store";
 import axios from "axios";
 import Footer from "../components/Footer";
+import { RESPONSE_INVALID_TOKEN, RESPONSE_SUCCESS } from "../data/constants";
+import { RouteComponentProps } from "react-router";
 
-interface OwnProps { }
+interface OwnProps extends RouteComponentProps {}
 interface StateProps {}
 interface DispatchProps {}
 interface ProfileProps extends OwnProps, StateProps, DispatchProps { };
 
-const Profile: React.FC<ProfileProps> = () => {
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone_number, setPhoneNumber] = useState("");
-  const [location, setLocation] = useState("");
-  const [language, setLanguage] = useState("");
+const Profile: React.FC<ProfileProps> = ({ history }) => {
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    phone_number: '',
+    location: '',
+    language: 'English',
+  });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [nameError, setNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [present] = useIonToast();
 
-  const getProfile = async () => {
-    const token = await Store.get("token");
+  useEffect(() => {
+    let isMounted = true;
+    const getProfile = async () => {
+      const token = await Store.get("token");
+  
+      try {
+        axios.post(`${process.env.REACT_APP_API}/get-profile.php`, { token: token })
+          .then((res) => {
+            const data = res.data;
+            const result = data.result;
+            const msg = data.msg;
+  
+            present({
+              message: msg,
+              duration: 1500,
+              position: 'bottom'
+            });
+  
+            if (result == RESPONSE_SUCCESS) {
+              const token = data.token;
+              Store.set("token", token);
+              if (isMounted) {
+                setProfile(data.profile);
+              }
+            } else if (result == RESPONSE_INVALID_TOKEN) {
+              history.push("/login", {direction: "none"});
+            }
+          })
+          .catch((err) => console.log(err));
+  
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
-    try {
-      axios.post(`${process.env.REACT_APP_API}/get-profile.php`, { token: token })
-        .then((res) => {
-          const data = res.data;
-          const result = data.result;
-          const msg = data.msg;
+    getProfile();
 
-          present({
-            message: msg,
-            duration: 1500,
-            position: 'bottom'
-          });
-
-          if (result === "success") {
-            const token = data.token;
-            Store.set("token", token);
-            setName(data.name);
-            setEmail(data.email);
-            setPhoneNumber(data.phone_number);
-            setLocation(data.location);
-            setLanguage(data.language);
-          }
-        })
-        .catch((err) => console.log(err));
-
-    } catch (err) {
-      console.log(err);
+    return () => {
+      isMounted = false;
     }
-  };
+  }, []);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
 
-    if (!name) { setNameError(true); }
-    if (!email) { setEmailError(true); }
+    if (!profile.name) { setNameError(true); }
+    if (!profile.email) { setEmailError(true); }
 
     const token = await Store.get("token");
 
     try {
       axios.post(`${process.env.REACT_APP_API}/save-profile.php`, {
           token: token,
-          name: name,
-          email: email,
-          phone_number: phone_number,
-          location: location,
-          language: language
+          name: profile.name,
+          email: profile.email,
+          phone_number: profile.phone_number,
+          location: profile.location,
+          language: profile.language
         }).then((res) => {
           const data = res.data;
           const result = data.result;
@@ -84,9 +96,11 @@ const Profile: React.FC<ProfileProps> = () => {
             position: 'bottom'
           });
 
-          if (result === "success") {
+          if (result == RESPONSE_SUCCESS) {
             const token = data.token;
             Store.set("token", token);
+          } else if (result == RESPONSE_INVALID_TOKEN) {
+            history.push("/login", {direction: "none"});
           }
         }).catch((err) => console.log(err));
 
@@ -95,17 +109,13 @@ const Profile: React.FC<ProfileProps> = () => {
     }
   };
 
-  useIonViewWillEnter(() => {
-    getProfile();
-  });
-
   return (
     <IonPage id="profile-page">
 
       <Header title="Profile" />
 
       <IonContent id="profile-page">
-        <div className="pt-10 pb-10">
+        <div className="pt-2 pb-5">
           <form onSubmit={saveProfile} className="text-lg px-6">
 
             <div className="mt-4">
@@ -114,8 +124,8 @@ const Profile: React.FC<ProfileProps> = () => {
                 name="name"
                 className="p-2 border-2 border-gray-100 rounded-xl w-full block"
                 placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={profile.name}
+                onChange={(e) => setProfile({name: e.target.value, email: '', phone_number: '', location: '', language: ''})}
                 required
               ></input>
 
@@ -133,8 +143,8 @@ const Profile: React.FC<ProfileProps> = () => {
                 name="email"
                 className="p-2 border-2 border-gray-100 rounded-xl w-full block"
                 placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={profile.email}
+                onChange={(e) => setProfile({name: '', email: e.target.value, phone_number: '', location: '', language: ''})}
                 required
               ></input>
 
@@ -152,8 +162,8 @@ const Profile: React.FC<ProfileProps> = () => {
                 name="phonenumber"
                 className="p-2 border-2 border-gray-100 rounded-xl w-full block"
                 placeholder="Phone Number"
-                value={phone_number}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                value={profile.phone_number}
+                onChange={(e) => setProfile({name: '', email: '', phone_number: e.target.value, location: '', language: ''})}
               ></input>
             </div>
 
@@ -163,8 +173,8 @@ const Profile: React.FC<ProfileProps> = () => {
                 name="location"
                 className="p-2 border-2 border-gray-100 rounded-xl w-full block"
                 placeholder="Location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                value={profile.location}
+                onChange={(e) => setProfile({name: '', email: '', phone_number: '', location: e.target.value, language: ''})}
               ></input>
             </div>
 
@@ -173,10 +183,10 @@ const Profile: React.FC<ProfileProps> = () => {
               <select
                 name="role"
                 className="p-2 border-2 border-gray-100 rounded-xl w-full block"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                value={profile.language}
+                onChange={(e) => setProfile({name: '', email: '', phone_number: '', location: '', language: e.target.value})}
               >
-                <option value="1" selected>English</option>
+                <option value="1">English</option>
                 <option value="2">Norwegian</option>
               </select>
             </div>
